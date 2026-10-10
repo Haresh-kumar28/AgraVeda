@@ -13,7 +13,7 @@ interface DecisionBriefProps {
   onSimulateAction: () => void;
 }
 
-export function DecisionBrief({ recommendations, pressure, bottlenecks, whatIfResult, onSimulateAction }: DecisionBriefProps) {
+export function DecisionBrief({ recommendations, pressure: _pressure, bottlenecks: _bottlenecks, whatIfResult, onSimulateAction }: DecisionBriefProps) {
   if (recommendations.length === 0) {
     return (
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex items-center gap-3">

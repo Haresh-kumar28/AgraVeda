@@ -1,206 +1,212 @@
-import React from 'react';
 import { DataQualityReport } from '../../engines/dataQualityEngine';
 import { ForecastResult } from '../../engines/forecastEngine';
-import { ShieldCheck, AlertTriangle, Database, Activity, CheckCircle, Info } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Database, Activity, CheckCircle2, Info } from 'lucide-react';
 
 interface DataQualityPageProps {
   report: DataQualityReport;
   forecast: ForecastResult;
 }
 
-export default function DataQualityPage({
-  report,
-  forecast
-}: DataQualityPageProps) {
-  
-  const getQualityColor = (quality: string) => {
-    switch(quality) {
-      case 'good': return 'text-emerald-700 bg-emerald-50 border-green-500/30';
-      case 'acceptable': return 'text-amber-700 bg-amber-50 border-yellow-500/30';
-      case 'degraded': return 'text-orange-700 bg-orange-50 border-orange-500/30';
-      case 'poor': return 'text-red-700 bg-red-500/20 border-red-200';
-      default: return 'text-slate-500 bg-slate-500/20 border-slate-500/30';
+export default function DataQualityPage({ report, forecast }: DataQualityPageProps) {
+  const getQualityBadge = (quality: string) => {
+    switch (quality) {
+      case 'good':
+        return 'text-[#0E7A4E] bg-[#ECFDF3] border-[#A6F4C5]';
+      case 'acceptable':
+        return 'text-[#B54708] bg-[#FFFAEB] border-[#FEDF89]';
+      case 'degraded':
+        return 'text-[#B54708] bg-[#FFFAEB] border-[#FEDF89]';
+      case 'poor':
+        return 'text-[#B42318] bg-[#FEF3F2] border-[#FECDCA]';
+      default:
+        return 'text-[#727272] bg-[#F8F9FA] border-[#EAEAEA]';
     }
   };
 
   return (
-    <div className="space-y-6 text-slate-900 p-6 h-full overflow-y-auto">
-      <header className="flex justify-between items-start">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EAEAEA]">
         <div>
-          <h1 className="text-2xl font-bold">Data Quality</h1>
-          <p className="text-slate-500">How reliable are the inputs?</p>
+          <div className="flex items-center gap-2">
+            <Database className="w-5 h-5 text-[#1B74E4]" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#222222]">
+              Data Quality & Model Trustworthiness
+            </h1>
+          </div>
+          <p className="text-xs text-[#727272] mt-1">
+            Audit input completeness, missingness, timestamp alignment, and heuristic fallback thresholds.
+          </p>
         </div>
-        <div className="px-3 py-1.5 bg-blue-500/20 border border-blue-500/40 text-blue-600 text-sm font-bold rounded flex items-center">
-          <Database className="w-4 h-4 mr-2" />
-          SIMULATED DATA
-        </div>
-      </header>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold flex items-center">
-            <Activity className="w-5 h-5 mr-2 text-blue-600" />
-            Quality Overview
-          </h2>
-          <span className={`px-3 py-1 rounded text-sm font-bold border uppercase tracking-wider ${getQualityColor(report.overallQuality)}`}>
-            {report.overallQuality}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[#1B74E4] bg-[#EAF4FF] border border-[#B2DDFF] px-2.5 py-1 rounded font-bold uppercase tracking-wider">
+            Synthetic Operational Dataset
+          </span>
+        </div>
+      </div>
+
+      {/* Quality Overview Card */}
+      <div className="p-6 bg-white border border-[#EAEAEA] rounded-md space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#1B74E4]" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#222222]">
+              Automated Data Audit Scorecard
+            </h2>
+          </div>
+          <span
+            className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getQualityBadge(
+              report.overallQuality
+            )}`}
+          >
+            Quality: {report.overallQuality}
           </span>
         </div>
 
-        <div className="mb-6">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-slate-500">Overall Quality Score</span>
-            <span className="font-bold">{report.qualityScore.toFixed(0)} / 100</span>
+        {/* Quality Score Bar */}
+        <div>
+          <div className="flex justify-between text-xs mb-2">
+            <span className="text-[#727272]">Aggregate Quality Index</span>
+            <span className="font-bold font-mono text-[#222222]">
+              {report.qualityScore.toFixed(0)} / 100
+            </span>
           </div>
-          <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-            <div 
+          <div className="w-full bg-[#F8F9FA] h-2 rounded-full overflow-hidden border border-[#EAEAEA]">
+            <div
               className={`h-full ${
-                report.qualityScore > 80 ? 'bg-green-500' :
-                report.qualityScore > 60 ? 'bg-yellow-500' :
-                report.qualityScore > 40 ? 'bg-orange-500' : 'bg-red-500'
-              }`} 
+                report.qualityScore > 80
+                  ? 'bg-[#0E7A4E]'
+                  : report.qualityScore > 60
+                  ? 'bg-[#B54708]'
+                  : 'bg-[#B42318]'
+              }`}
               style={{ width: `${report.qualityScore}%` }}
-            ></div>
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">Completeness</div>
-            <div className="text-2xl font-bold">{report.completenessPercent.toFixed(1)}%</div>
+        {/* 4 Pillars */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-3 bg-[#F8F9FA] rounded border border-[#EAEAEA]">
+            <div className="text-[10px] uppercase font-bold text-[#727272]">Completeness</div>
+            <div className="text-2xl font-bold text-[#222222] mt-1">
+              {report.completenessPercent.toFixed(1)}%
+            </div>
           </div>
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">Missing Values</div>
-            <div className={`text-2xl font-bold ${report.missingValueCount > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+          <div className="p-3 bg-[#F8F9FA] rounded border border-[#EAEAEA]">
+            <div className="text-[10px] uppercase font-bold text-[#727272]">Missing Values</div>
+            <div
+              className={`text-2xl font-bold mt-1 ${
+                report.missingValueCount > 0 ? 'text-[#B54708]' : 'text-[#0E7A4E]'
+              }`}
+            >
               {report.missingValueCount}
             </div>
           </div>
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">Outliers</div>
-            <div className={`text-2xl font-bold ${report.outlierCount > 0 ? 'text-orange-700' : 'text-emerald-700'}`}>
+          <div className="p-3 bg-[#F8F9FA] rounded border border-[#EAEAEA]">
+            <div className="text-[10px] uppercase font-bold text-[#727272]">Outliers Detected</div>
+            <div
+              className={`text-2xl font-bold mt-1 ${
+                report.outlierCount > 0 ? 'text-[#B54708]' : 'text-[#0E7A4E]'
+              }`}
+            >
               {report.outlierCount}
             </div>
           </div>
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">Timestamp Issues</div>
-            <div className={`text-2xl font-bold ${report.timestampIssues > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
+          <div className="p-3 bg-[#F8F9FA] rounded border border-[#EAEAEA]">
+            <div className="text-[10px] uppercase font-bold text-[#727272]">Timestamp Skew</div>
+            <div
+              className={`text-2xl font-bold mt-1 ${
+                report.timestampIssues > 0 ? 'text-[#B42318]' : 'text-[#0E7A4E]'
+              }`}
+            >
               {report.timestampIssues}
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+        <div className="p-3.5 bg-[#F8F9FA] rounded border border-[#EAEAEA] flex items-center justify-between text-xs">
           <div>
-            <span className="text-slate-500 text-sm block mb-1">Model Status</span>
-            <span className="font-semibold text-lg">
-              {report.canRunModel ? 'Ready' : `Fallback: ${report.fallbackReason}`}
+            <span className="text-[#727272] block">Pipeline Readiness Status</span>
+            <span className="font-bold text-[#222222] text-sm">
+              {report.canRunModel ? 'Primary Engine Active' : `Fallback Active: ${report.fallbackReason}`}
             </span>
           </div>
-          {report.canRunModel ? <CheckCircle className="text-green-500 w-8 h-8" /> : <AlertTriangle className="text-red-500 w-8 h-8" />}
+          {report.canRunModel ? (
+            <CheckCircle2 className="w-5 h-5 text-[#0E7A4E]" />
+          ) : (
+            <AlertTriangle className="w-5 h-5 text-[#B42318]" />
+          )}
         </div>
       </div>
 
       {report.warnings.length > 0 && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-start space-x-3">
-          <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+        <div className="p-4 bg-[#FFFAEB] border border-[#FEDF89] rounded-md text-xs text-[#B54708] flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-yellow-500 font-semibold mb-1">Data Quality Warnings</h3>
-            <ul className="list-disc pl-4 text-sm text-amber-700/80 space-y-1">
-              {report.warnings.map((w, i) => <li key={i}>{w}</li>)}
+            <span className="font-bold uppercase tracking-wider text-[10px]">Data Quality Warnings</span>
+            <ul className="list-disc pl-4 mt-1 space-y-0.5">
+              {report.warnings.map((w, i) => (
+                <li key={i}>{w}</li>
+              ))}
             </ul>
           </div>
         </div>
       )}
 
+      {/* Model Transparency & MVP Limitations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-2 text-rose-400" />
-            Real-World Data Challenges
-          </h2>
-          <ul className="list-disc pl-5 text-sm text-slate-700 space-y-2">
-            <li><strong>Missing arrivals:</strong> Registration delays cause patients to appear later in the system.</li>
-            <li><strong>Delayed records:</strong> System sync intervals can delay up-to-date occupancy numbers.</li>
-            <li><strong>Inconsistent timestamps:</strong> Clocks across different hospital systems may not align perfectly.</li>
-            <li><strong>Outliers:</strong> Typos in manual entry can lead to physically impossible values.</li>
-            <li><strong>Incomplete resource data:</strong> Staffing levels are often tracked in separate, siloed systems.</li>
-            <li><strong>Changing definitions:</strong> What constitutes a "bed" might vary during crisis mode.</li>
-          </ul>
-        </div>
+        <div className="p-5 bg-white border border-[#EAEAEA] rounded-md space-y-4">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-[#1B74E4]" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#222222]">
+              Model Transparency & Verification
+            </h2>
+          </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center">
-            <ShieldCheck className="w-5 h-5 mr-2 text-emerald-700" />
-            MVP Safeguards
-          </h2>
-          <ul className="space-y-2 text-sm text-slate-700">
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Missing-value detection</li>
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Basic missing-value handling (Last Observation Carried Forward)</li>
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Numeric/range validation</li>
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Timestamp validation</li>
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Outlier detection</li>
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Data completeness score</li>
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Simulated-data labeling</li>
-            <li className="flex items-center"><CheckCircle className="w-4 h-4 text-green-500 mr-2" /> Safe fallback heuristic when data is too poor</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center">
-            <Info className="w-5 h-5 mr-2 text-blue-600" />
-            Model Transparency
-          </h2>
-          <div className="space-y-3 text-sm text-slate-700">
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Model Architecture</span>
-              <span className="font-medium">Hybrid Heuristic</span>
+          <div className="divide-y divide-[#EAEAEA] text-xs">
+            <div className="flex justify-between py-2">
+              <span className="text-[#727272]">Forecasting Architecture</span>
+              <strong className="text-[#222222]">Temporal Hybrid Heuristic</strong>
             </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Forecast Horizon</span>
-              <span className="font-medium">1-6 hours</span>
+            <div className="flex justify-between py-2">
+              <span className="text-[#727272]">Forecast Horizon</span>
+              <strong className="text-[#222222]">1 to 6 Hours</strong>
             </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Primary Inputs</span>
-              <span className="font-medium text-right">Time, Current Demand, Historical Demand, Resource Capacity</span>
+            <div className="flex justify-between py-2">
+              <span className="text-[#727272]">Historical Validation (MAE)</span>
+              <strong className="text-[#222222]">{forecast.metrics.mae.toFixed(2)} pts/hr</strong>
             </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Validation (MAE)</span>
-              <span className="font-medium">{forecast.mae} patients/hr</span>
+            <div className="flex justify-between py-2">
+              <span className="text-[#727272]">Root Mean Square Error (RMSE)</span>
+              <strong className="text-[#222222]">{forecast.metrics.rmse.toFixed(2)} pts/hr</strong>
             </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Validation (RMSE)</span>
-              <span className="font-medium">{forecast.rmse} patients/hr</span>
-            </div>
-            <div className="flex justify-between pt-1">
-              <span className="text-slate-500">Training Data Source</span>
-              <span className="font-medium text-blue-600">SIMULATED / DEMO</span>
+            <div className="flex justify-between py-2">
+              <span className="text-[#727272]">Dataset Provenance</span>
+              <span className="font-semibold text-[#1B74E4]">Synthetic Benchmark (14 Days)</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4 text-slate-900">MVP Limitations</h2>
-          <div className="space-y-4 text-sm text-slate-700">
-            <div>
-              <strong className="text-slate-800 block mb-1">Current MVP includes:</strong>
-              <p className="text-slate-500">Heuristic forecasting based on structured synthetic data, deterministic what-if simulator, basic data quality checks.</p>
-            </div>
-            <div>
-              <strong className="text-slate-800 block mb-1">Future production capabilities required:</strong>
-              <ul className="list-disc pl-5 text-slate-500 space-y-1 mt-1">
-                <li>Real hospital EMR/EHR system integrations (HL7/FHIR)</li>
-                <li>Real-time continuous data feeds</li>
-                <li>Hospital-specific model calibration</li>
-                <li>External variables (weather, local events, EMS dispatch)</li>
-                <li>Advanced ML models (LSTM, Prophet, XGBoost)</li>
-                <li>Rigorous prospective clinical validation</li>
-              </ul>
-            </div>
-            <p className="text-xs text-orange-700 italic bg-orange-500/10 p-2 rounded">
-              Note: These advanced capabilities are not yet implemented in this demonstration prototype.
+        <div className="p-5 bg-white border border-[#EAEAEA] rounded-md space-y-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#0E7A4E]" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#222222]">
+              Real-World Production Prerequisites
+            </h2>
+          </div>
+
+          <div className="space-y-2 text-xs text-[#727272] leading-relaxed">
+            <p>
+              Before AgraVeda can be certified for live hospital operational control:
             </p>
+            <ul className="list-disc pl-5 space-y-1 text-[#222222]">
+              <li>Bilateral HL7 v2 / FHIR ADT stream integration.</li>
+              <li>Facility-specific model calibration against historical patient volume.</li>
+              <li>Role authorization tied to institutional Single Sign-On (SAML / OIDC).</li>
+              <li>Prospective operational validation with department leadership.</li>
+            </ul>
           </div>
         </div>
       </div>

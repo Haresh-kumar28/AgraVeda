@@ -35,7 +35,8 @@ export type PageId =
   | 'scenarios'
   | 'what-if'
   | 'decisions'
-  | 'data-quality';
+  | 'data-quality'
+  | 'administration';
 
 /** Build SimulationInputs from an EDRecord baseline */
 export function inputsFromRecord(record: EDRecord): SimulationInputs {

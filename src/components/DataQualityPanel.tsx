@@ -1,4 +1,4 @@
-import { Shield, Database, AlertCircle, CheckCircle } from 'lucide-react';
+import { Database, AlertCircle, CheckCircle } from 'lucide-react';
 import { DataQualityReport } from '../engines/dataQualityEngine';
 
 interface DataQualityPanelProps {

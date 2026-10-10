@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, Zap, Radio } from 'lucide-react';
+import { Activity, Zap, Radio } from 'lucide-react';
 import { PressureLevel } from '../engines/pressureEngine';
 
 type Scenario = 'normal' | 'accident_surge' | 'weekend_peak';
@@ -31,9 +31,9 @@ export default function Header({ scenario, onScenarioChange, pressureLevel }: He
           {/* Left: Brand */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Activity className="w-6 h-6 text-blue-600" />
+              <Activity className="w-6 h-6 text-[#1B74E4]" />
               <div>
-                <h1 className="text-lg font-bold text-slate-900 tracking-tight">EDPulse</h1>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">AgraVeda</h1>
                 <p className="text-[10px] text-slate-500 -mt-0.5 tracking-wider uppercase">Predictive ED Operations Intelligence</p>
               </div>
             </div>

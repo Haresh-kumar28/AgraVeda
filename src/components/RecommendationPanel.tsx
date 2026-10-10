@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Lightbulb, MapPin, Clock, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle, MapPin, Clock, Zap } from 'lucide-react';
 import { Recommendation } from '../engines/recommendationEngine';
 import { PressureLevel } from '../engines/pressureEngine';
 

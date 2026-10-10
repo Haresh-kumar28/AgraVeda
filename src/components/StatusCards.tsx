@@ -7,7 +7,7 @@ interface StatusCardsProps {
   pressure: PressureResult;
 }
 
-export default function StatusCards({ currentRecord, pressure }: StatusCardsProps) {
+export default function StatusCards({ currentRecord, pressure: _pressure }: StatusCardsProps) {
   const occupancyPct = Math.round((currentRecord.currentOccupancy / currentRecord.totalBeds) * 100);
   const staffUtilPct = Math.round(
     (currentRecord.currentOccupancy / (currentRecord.doctorsAvailable * 6 + currentRecord.nursesAvailable * 4)) * 200
