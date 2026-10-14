@@ -67,7 +67,7 @@ export function generateSyntheticData(): EDRecord[] {
     let waitingPatients = Math.round(occupancyRatio * 15 * random());
     if (occupancyRatio > 0.8) waitingPatients += Math.round(random() * 10);
     
-    const availableBeds = totalBeds - Math.round(currentOccupancy * 0.85);
+    const availableBeds = Math.max(0, totalBeds - currentOccupancy);
     
     let doctorsAvailable = 4;
     let nursesAvailable = 7;

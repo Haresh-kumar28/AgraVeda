@@ -103,9 +103,14 @@ function AppContent() {
     }
     if (newInputs.currentOccupancy !== inputs.currentOccupancy) {
       changes.push(`Occupancy adjusted from ${inputs.currentOccupancy} to ${newInputs.currentOccupancy}`);
-    }
-    if (newInputs.availableBeds !== inputs.availableBeds) {
+      if (newInputs.availableBeds === inputs.availableBeds) {
+        newInputs.availableBeds = Math.max(0, newInputs.totalBeds - newInputs.currentOccupancy);
+      }
+    } else if (newInputs.availableBeds !== inputs.availableBeds) {
       changes.push(`Available beds adjusted from ${inputs.availableBeds} to ${newInputs.availableBeds}`);
+      if (newInputs.currentOccupancy === inputs.currentOccupancy) {
+        newInputs.currentOccupancy = Math.max(0, newInputs.totalBeds - newInputs.availableBeds);
+      }
     }
     if (newInputs.nursesAvailable !== inputs.nursesAvailable) {
       changes.push(`Nurses adjusted from ${inputs.nursesAvailable} to ${newInputs.nursesAvailable}`);
@@ -139,6 +144,22 @@ function AppContent() {
     setWhatIfParams({ additionalBeds: 0, additionalNurses: 0, additionalDoctors: 0, patientSurgePercent: 0 });
     setInputChangeExplanation(null);
   }, [baselineRecord]);
+
+  const handleApplyWhatIfToOperations = useCallback((params: WhatIfParams) => {
+    setInputs(prev => ({
+      ...prev,
+      scenario: 'custom',
+      totalBeds: prev.totalBeds + params.additionalBeds,
+      availableBeds: Math.max(0, prev.availableBeds + params.additionalBeds),
+      nursesAvailable: prev.nursesAvailable + params.additionalNurses,
+      doctorsAvailable: prev.doctorsAvailable + params.additionalDoctors,
+      surgeMult: Number((prev.surgeMult * (1 + params.patientSurgePercent / 100)).toFixed(2)),
+    }));
+    setInputChangeExplanation(
+      `What-If interventions applied to operational parameters: +${params.additionalBeds} beds, +${params.additionalNurses} nurses, +${params.additionalDoctors} doctors, ${params.patientSurgePercent}% surge shock.`
+    );
+    setWhatIfParams({ additionalBeds: 0, additionalNurses: 0, additionalDoctors: 0, patientSurgePercent: 0 });
+  }, []);
 
   const handleSimulateAction = useCallback(() => {
     const bedGap = bottlenecks.primary.gap;
@@ -255,6 +276,7 @@ function AppContent() {
             currentRecord={currentRecord}
             bottlenecks={bottlenecks}
             forecast={forecast}
+            onNavigate={handleNavigateAppPage}
           />
         );
       case 'resources':
@@ -263,6 +285,7 @@ function AppContent() {
             bottlenecks={bottlenecks}
             currentRecord={currentRecord}
             forecast={forecast}
+            onNavigate={handleNavigateAppPage}
           />
         );
       case 'scenarios':
@@ -270,6 +293,11 @@ function AppContent() {
           <ScenariosPage
             currentScenario={inputs.scenario}
             onSelectScenario={handleSelectScenario}
+            onReset={handleReset}
+            onNavigate={handleNavigateAppPage}
+            baselineRecord={baselineRecord}
+            currentRecord={currentRecord}
+            currentInputs={inputs}
             pressure={pressure}
             bottlenecks={bottlenecks}
             forecast={forecast}
@@ -289,6 +317,8 @@ function AppContent() {
                 patientSurgePercent: 0,
               })
             }
+            onNavigate={handleNavigateAppPage}
+            onApplyToOperations={handleApplyWhatIfToOperations}
           />
         );
       case 'decisions':
@@ -303,7 +333,14 @@ function AppContent() {
           />
         );
       case 'data-quality':
-        return <DataQualityPage report={dataQualityReport} forecast={forecast} />;
+        return (
+          <DataQualityPage
+            report={dataQualityReport}
+            forecast={forecast}
+            records={syntheticData}
+            onNavigate={handleNavigateAppPage}
+          />
+        );
       case 'administration':
         return <AdminPage />;
       default:
@@ -326,6 +363,7 @@ function AppContent() {
         <Topbar
           onSignOut={handleSignOut}
           onNavigateHome={() => setCurrentRoute('landing')}
+          onNavigateAppPage={handleNavigateAppPage}
         />
         <div className="app-content">{renderActiveModule()}</div>
         <footer className="py-4 text-center text-[10px] text-[#727272] border-t border-[#EAEAEA] bg-white">

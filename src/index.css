@@ -1,21 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --color-text: #222222;
+  /* Foundation */
+  --color-background: #FAFAF8;
   --color-canvas: #FFFFFF;
-  --color-muted: #727272;
+  --color-surface-muted: #F5F3F0;
+  --color-text: #1A1A1A;
+  --color-muted: #6B6B6B;
   --color-placeholder: #B6B6B6;
   --color-surface: #F8F9FA;
   --color-surface-hover: #F2F4F7;
-  --color-divider: #EAEAEA;
+  --color-divider: #E8E4DF;
   --color-divider-subtle: #F0F2F5;
-  --color-border: #E5E7EB;
-  
+  --color-border: #E8E4DF;
+
+  /* Healthcare Blue */
   --color-primary: #1B74E4;
   --color-primary-hover: #1558B0;
   --color-primary-wash: #EAF4FF;
   --color-primary-subtle: #F0F7FF;
 
+  /* Gold Accent */
+  --color-gold: #B8860B;
+  --color-gold-light: #D4A84B;
+
+  /* Semantic States */
   --color-success: #0E7A4E;
   --color-success-bg: #ECFDF3;
   --color-success-border: #A6F4C5;
@@ -28,15 +37,29 @@
   --color-critical-bg: #FEF3F2;
   --color-critical-border: #FECDCA;
 
+  --color-info: #175CD3;
+  --color-info-bg: #EFF8FF;
+  --color-info-border: #B2DDFF;
+
+  /* Radii */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+  --radius-xl: 12px;
 
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-hero: 0 8px 32px rgba(0, 0, 0, 0.10);
+
+  /* Typography */
+  font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--color-text);
   background-color: var(--color-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -52,10 +75,24 @@ body {
   min-width: 320px;
   background-color: var(--color-surface);
   color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
 }
 
-/* Reduced motion support */
+/* ====== Font Utilities ====== */
+
+.font-serif {
+  font-family: "Playfair Display", Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+.font-mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.editorial-serif {
+  font-family: "Playfair Display", Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+/* ====== Reduced Motion ====== */
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
@@ -63,15 +100,140 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .hero-video,
+  .hero-bg-video {
+    display: none !important;
+  }
+  .hero-poster {
+    display: block !important;
+  }
+  /* When video hidden, hero section gets a subtle hint of the brand */
+  .hero-section {
+    background: linear-gradient(135deg, #FAFAF8 0%, #F0F7FF 50%, #FAFAF8 100%);
+  }
 }
 
-/* Accessible focus ring */
+/* ====== Cinematic Hero Background Video ====== */
+
+.hero-section {
+  min-height: 520px;
+  background-color: #FAFAF8;
+}
+
+@media (min-width: 768px) {
+  .hero-section {
+    min-height: 600px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    min-height: 680px;
+  }
+}
+
+/* Background video & still poster — absolutely positioned, decorative, noninteractive */
+.hero-bg-video,
+.hero-bg-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center right;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.38;
+  -webkit-mask-image: radial-gradient(ellipse 95% 85% at 75% 50%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0.6) 65%, transparent 92%);
+  mask-image: radial-gradient(ellipse 95% 85% at 75% 50%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0.6) 65%, transparent 92%);
+}
+
+/* Multi-layer gradient overlay for soft edge-blending into #FAFAF8 */
+.hero-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    /* Strong left fade — protects text readability */
+    linear-gradient(to right,
+      #FAFAF8 0%,
+      #FAFAF8 15%,
+      rgba(250, 250, 248, 0.94) 30%,
+      rgba(250, 250, 248, 0.65) 50%,
+      rgba(250, 250, 248, 0.20) 70%,
+      rgba(250, 250, 248, 0.0) 85%
+    ),
+    /* Top fade — seamless blend with header */
+    linear-gradient(to bottom,
+      #FAFAF8 0%,
+      rgba(250, 250, 248, 0.85) 8%,
+      rgba(250, 250, 248, 0.3) 25%,
+      transparent 45%
+    ),
+    /* Bottom fade — natural merge into following section */
+    linear-gradient(to top,
+      #FAFAF8 0%,
+      rgba(250, 250, 248, 0.9) 10%,
+      rgba(250, 250, 248, 0.4) 30%,
+      transparent 55%
+    ),
+    /* Subtle right fade */
+    linear-gradient(to left,
+      rgba(250, 250, 248, 0.5) 0%,
+      transparent 15%
+    );
+}
+
+/* Mobile: increase video transparency and deepen left-side fade */
+@media (max-width: 768px) {
+  .hero-bg-video,
+  .hero-bg-poster {
+    opacity: 0.20;
+    object-position: center center;
+    -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, rgba(0, 0, 0, 0.8) 30%, transparent 95%);
+    mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, rgba(0, 0, 0, 0.8) 30%, transparent 95%);
+  }
+  .hero-gradient-overlay {
+    background:
+      linear-gradient(to right,
+        #FAFAF8 0%,
+        #FAFAF8 20%,
+        rgba(250, 250, 248, 0.95) 40%,
+        rgba(250, 250, 248, 0.7) 60%,
+        rgba(250, 250, 248, 0.3) 80%,
+        rgba(250, 250, 248, 0.1) 100%
+      ),
+      linear-gradient(to bottom,
+        #FAFAF8 0%,
+        rgba(250, 250, 248, 0.8) 15%,
+        transparent 40%
+      ),
+      linear-gradient(to top,
+        #FAFAF8 0%,
+        rgba(250, 250, 248, 0.85) 12%,
+        transparent 40%
+      );
+  }
+}
+
+/* Tablet: moderate adjustments */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .hero-bg-video,
+  .hero-bg-poster {
+    opacity: 0.30;
+  }
+}
+
+/* ====== Focus Ring ====== */
+
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Custom scrollbars */
+/* ====== Scrollbars ====== */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -87,7 +249,15 @@ body {
   background: #98A2B3;
 }
 
-/* Shared UI Utility Classes */
+/* ====== Smooth Scroll ====== */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* offset for sticky header */
+}
+
+/* ====== App Shell (operational dashboard, NOT landing page) ====== */
+
 .app-shell {
   min-height: 100vh;
   background-color: #F8F9FA;
@@ -165,7 +335,13 @@ body {
   gap: 6px;
 }
 
-/* Dashboard Cards conforming to 0-6px border radius hairline aesthetic */
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Dashboard Cards */
 .dashboard-card {
   background: #FFFFFF;
   border: 1px solid var(--color-divider);
@@ -177,8 +353,65 @@ body {
   border-color: #D4D4D4;
 }
 
-.editorial-serif {
-  font-family: "Newsreader", Georgia, Cambria, "Times New Roman", Times, serif;
+/* ====== Landing Page Specific ====== */
+
+.landing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+@media (max-width: 640px) {
+  .landing-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Landing section animation */
+.landing-section {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.landing-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hero video fallback */
+.hero-poster {
+  display: none;
+}
+
+/* Flow connector for patient flow section */
+.flow-connector {
+  width: 1px;
+  height: 24px;
+  background: var(--color-divider);
+  margin: 0 auto;
+}
+
+.flow-connector-h {
+  width: 24px;
+  height: 1px;
+  background: var(--color-divider);
+  flex-shrink: 0;
+}
+
+/* FAQ accordion animation */
+.faq-answer {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+}
+
+.faq-answer.open {
+  max-height: 500px;
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
