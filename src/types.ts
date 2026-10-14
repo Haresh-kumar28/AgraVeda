@@ -99,7 +99,7 @@ export function applyScenario(baseInputs: SimulationInputs, scenario: Simulation
       i.surgeMult = 1.1;
       i.isWeekend = true;
       i.currentOccupancy = Math.min(i.totalBeds - 3, Math.round(i.currentOccupancy * 1.1));
-      i.availableBeds = Math.max(3, i.totalBeds - Math.round(i.currentOccupancy * 0.85));
+      i.availableBeds = Math.max(0, i.totalBeds - i.currentOccupancy);
       return i;
     case 'outbreak':
       i.surgeMult = 1.5;

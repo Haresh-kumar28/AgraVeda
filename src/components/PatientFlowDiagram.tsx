@@ -32,7 +32,7 @@ export default function PatientFlowDiagram({ bottlenecks, currentRecord }: Patie
           const isBottleneck = stage.resource === primaryResource;
           const count = stage.key === 'waiting' ? currentRecord.waitingPatients :
                        stage.key === 'arrival' ? currentRecord.arrivals :
-                       stage.key === 'treatment' ? (currentRecord.totalBeds - currentRecord.availableBeds) :
+                       stage.key === 'treatment' ? currentRecord.currentOccupancy :
                        stage.key === 'diagnostics' ? currentRecord.diagnosticQueue :
                        null;
 
