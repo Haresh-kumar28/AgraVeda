@@ -302,22 +302,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               using transparent reasoning and available data.
             </p>
 
-            <div className="pt-1 flex flex-wrap items-center gap-3">
-              <button
-                onClick={onExploreDemo}
-                className="h-11 px-6 rounded-md bg-[#1B74E4] hover:bg-[#1558B0] text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:shadow-md transition-all cursor-pointer"
-              >
-                <span>Launch Interactive Demo</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+            
+<div className="pt-1 flex flex-wrap items-center gap-3">
+  <button
+    onClick={() => onNavigate('login')}
+    className="h-11 px-6 rounded-md bg-[#1B74E4] hover:bg-[#1558B0] text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:shadow-md transition-all cursor-pointer"
+  >
+    <span>Sign in to AgraVeda</span>
+    <ArrowRight className="w-4 h-4" />
+  </button>
 
-              <button
-                onClick={() => onNavigate('signup')}
-                className="h-11 px-5 rounded-md bg-white/90 backdrop-blur-sm border border-[#E8E4DF] hover:border-[#B6B6B6] text-[#1A1A1A] text-sm font-semibold transition-all cursor-pointer"
-              >
-                Request Hospital Access
-              </button>
-            </div>
+  <button
+    onClick={onExploreDemo}
+    className="h-11 px-5 rounded-md bg-white/90 backdrop-blur-sm border border-[#E8E4DF] hover:border-[#B6B6B6] text-[#1A1A1A] text-sm font-semibold transition-all cursor-pointer"
+  >
+    Explore Interactive Demo
+  </button>
+
+  <button
+    onClick={() => onNavigate('signup')}
+    className="h-11 px-5 rounded-md bg-white/90 backdrop-blur-sm border border-[#E8E4DF] hover:border-[#B6B6B6] text-[#1A1A1A] text-sm font-semibold transition-all cursor-pointer"
+  >
+    Request Hospital Access
+  </button>
+</div>
+
 
             <div className="pt-2 flex items-center gap-2 text-[11px] text-[#6B6B6B]">
               <span className="w-2 h-2 rounded-full bg-[#0E7A4E] shrink-0" aria-hidden="true" />

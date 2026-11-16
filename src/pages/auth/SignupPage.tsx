@@ -1,5 +1,14 @@
+
 import React, { useState } from 'react';
-import { Mail, Lock, User, Building, ArrowRight, AlertCircle, Info } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  User,
+  Building,
+  ArrowRight,
+  AlertCircle,
+  Info,
+} from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { BrandLogo } from '../../components/BrandLogo';
 import { UserRole, ROLE_LABELS, ROLE_DESCRIPTIONS } from '../../auth/roles';
@@ -10,6 +19,7 @@ interface SignupPageProps {
 
 export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const { signup, isLoading } = useAuth();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [organization, setOrganization] = useState('');
@@ -18,22 +28,25 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
+
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
 
     try {
-      await signup({
+      const result = await signup({
         name,
         email,
         organization,
@@ -41,9 +54,23 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         requestedRole,
         password,
       });
-      onNavigate('app');
-    } catch {
-      setError('Registration request failed. Please try again.');
+
+      if (result.requiresEmailConfirmation) {
+        setSuccess(result.note);
+        return;
+      }
+
+      if (result.user) {
+        onNavigate('app');
+      } else {
+        setSuccess(result.note);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Registration failed. Please try again.'
+      );
     }
   };
 
@@ -56,11 +83,13 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         >
           <BrandLogo size="md" />
         </button>
+
         <button
           onClick={() => onNavigate('login')}
           className="text-xs text-[#727272] hover:text-[#222222] font-medium"
         >
-          Already have access? <span className="text-[#1B74E4] font-semibold">Sign in</span>
+          Already have access?{' '}
+          <span className="text-[#1B74E4] font-semibold">Sign in</span>
         </button>
       </header>
 
@@ -70,19 +99,28 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#1B74E4] bg-[#EAF4FF] px-2 py-0.5 rounded-sm">
               Staff Provisioning Request
             </span>
-            <h1 className="text-2xl font-bold text-[#222222] mt-2">Request AgraVeda Access</h1>
+
+            <h1 className="text-2xl font-bold text-[#222222] mt-2">
+              Request AgraVeda Access
+            </h1>
+
             <p className="text-xs text-[#727272] mt-1">
-              Enroll your hospital team to anticipate emergency operational bottlenecks.
+              Enroll your hospital team to anticipate emergency operational
+              bottlenecks.
             </p>
           </div>
 
-          {/* Role disclaimer callout */}
           <div className="mb-6 p-3.5 bg-[#EFF8FF] border border-[#B2DDFF] rounded-md text-xs text-[#175CD3] flex items-start gap-2.5">
             <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold">Security Governance Principle:</span>
+              <span className="font-semibold">
+                Security Governance Principle:
+              </span>
               <p className="mt-0.5 leading-relaxed text-[#1558B0]">
-                Selecting a role is a permission request, not proof of authorization. Production deployment requires institutional credential verification before assigning administrator or clinical roles.
+                Selecting a role is a permission request, not proof of
+                authorization. Production deployment requires institutional
+                credential verification before assigning administrator or
+                clinical roles.
               </p>
             </div>
           </div>
@@ -97,12 +135,25 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             </div>
           )}
 
+          {success && (
+            <div
+              role="status"
+              className="mb-5 p-3 rounded-md bg-[#ECFDF3] border border-[#ABEFC6] text-[#067647] text-xs"
+            >
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="name" className="block text-xs font-semibold text-[#222222] mb-1">
-                  Full Name & Title
+                <label
+                  htmlFor="name"
+                  className="block text-xs font-semibold text-[#222222] mb-1"
+                >
+                  Full Name &amp; Title
                 </label>
+
                 <div className="relative">
                   <input
                     id="name"
@@ -118,9 +169,13 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-[#222222] mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-xs font-semibold text-[#222222] mb-1"
+                >
                   Institutional Email
                 </label>
+
                 <div className="relative">
                   <input
                     id="email"
@@ -139,9 +194,13 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="org" className="block text-xs font-semibold text-[#222222] mb-1">
+                <label
+                  htmlFor="org"
+                  className="block text-xs font-semibold text-[#222222] mb-1"
+                >
                   Hospital / Health System
                 </label>
+
                 <div className="relative">
                   <input
                     id="org"
@@ -157,9 +216,13 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
               </div>
 
               <div>
-                <label htmlFor="dept" className="block text-xs font-semibold text-[#222222] mb-1">
+                <label
+                  htmlFor="dept"
+                  className="block text-xs font-semibold text-[#222222] mb-1"
+                >
                   Department / Unit (Optional)
                 </label>
+
                 <input
                   id="dept"
                   type="text"
@@ -172,21 +235,26 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-xs font-semibold text-[#222222] mb-1">
+              <label
+                htmlFor="role"
+                className="block text-xs font-semibold text-[#222222] mb-1"
+              >
                 Requested Operational Role
               </label>
+
               <select
                 id="role"
                 value={requestedRole}
                 onChange={(e) => setRequestedRole(e.target.value as UserRole)}
                 className="w-full h-10 px-3 rounded-md border border-[#E5E7EB] bg-white text-sm text-[#222222] focus:border-[#1B74E4] focus:outline-none"
               >
-                {(Object.keys(ROLE_LABELS) as UserRole[]).map((r) => (
-                  <option key={r} value={r}>
-                    {ROLE_LABELS[r]}
+                {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
                   </option>
                 ))}
               </select>
+
               <p className="text-[11px] text-[#727272] mt-1.5">
                 {ROLE_DESCRIPTIONS[requestedRole]}
               </p>
@@ -194,9 +262,13 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div>
-                <label htmlFor="pass" className="block text-xs font-semibold text-[#222222] mb-1">
+                <label
+                  htmlFor="pass"
+                  className="block text-xs font-semibold text-[#222222] mb-1"
+                >
                   Password
                 </label>
+
                 <div className="relative">
                   <input
                     id="pass"
@@ -213,9 +285,13 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
               </div>
 
               <div>
-                <label htmlFor="cpass" className="block text-xs font-semibold text-[#222222] mb-1">
+                <label
+                  htmlFor="cpass"
+                  className="block text-xs font-semibold text-[#222222] mb-1"
+                >
                   Confirm Password
                 </label>
+
                 <div className="relative">
                   <input
                     id="cpass"
@@ -257,7 +333,8 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       </main>
 
       <footer className="py-4 text-center text-[11px] text-[#727272] border-t border-[#EAEAEA] bg-white">
-        AgraVeda Operations Platform · Operational Decision Support Only · Synthetic Healthcare Demo
+        AgraVeda Operations Platform · Operational Decision Support Only ·
+        Synthetic Healthcare Demo
       </footer>
     </div>
   );
