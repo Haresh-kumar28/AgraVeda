@@ -1,12 +1,6 @@
-import { UserProfile, UserRole } from './roles';
 
-export interface AuthState {
-  user: UserProfile | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  isDemoMode: boolean;
-}
+import { UserProfile, UserRole } from './roles';
+import { supabase } from '../lib/supabase';
 
 export interface LoginCredentials {
   email: string;
@@ -23,7 +17,20 @@ export interface SignupData {
   password?: string;
 }
 
-// Pre-seeded demo profiles representing each operational persona
+export interface SignupResult {
+  user: UserProfile | null;
+  note: string;
+  requiresEmailConfirmation: boolean;
+}
+
+const VALID_ROLES: UserRole[] = [
+  'hospital_admin',
+  'ed_manager',
+  'clinician',
+  'nurse_ops',
+  'analyst',
+];
+
 export const DEMO_PROFILES: Record<UserRole, UserProfile> = {
   hospital_admin: {
     id: 'demo-admin-01',
@@ -79,104 +86,254 @@ export const DEMO_PROFILES: Record<UserRole, UserProfile> = {
 
 const SESSION_STORAGE_KEY = 'agraveda_demo_session';
 
-export class AuthAdapter {
-  /**
-   * Initial session check. Uses sessionStorage so demo sessions don't linger dangerously,
-   * but allow page refresh within an active tab.
-   */
-  static getSession(): UserProfile | null {
-    try {
-      const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch {
-      // Fallback
-    }
+function isBrowser(): boolean {
+  return typeof window !== 'undefined';
+}
+
+function getDemoSession(): UserProfile | null {
+  if (!isBrowser()) return null;
+
+  try {
+    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!stored) return null;
+
+    const profile = JSON.parse(stored) as UserProfile;
+
+    return (
+      Object.values(DEMO_PROFILES).find(
+        (item) => item.id === profile.id && item.role === profile.role
+      ) ?? null
+    );
+  } catch {
     return null;
   }
+}
 
-  static async login(credentials: LoginCredentials): Promise<UserProfile> {
-    // Simulate real auth handshake delay
-    await new Promise((r) => setTimeout(r, 450));
+async function getSupabaseProfile(
+  userId: string,
+  email: string
+): Promise<UserProfile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, organization, department, role, verified')
+    .eq('id', userId)
+    .single();
 
-    const emailLower = credentials.email.trim().toLowerCase();
-    
-    // Check if logging into a demo persona
-    const foundDemo = Object.values(DEMO_PROFILES).find(
-      (p) => p.email.toLowerCase() === emailLower
+  if (error || !data) {
+    throw new Error(
+      'Your account profile could not be loaded. Please contact your administrator.'
     );
+  }
 
-    if (foundDemo) {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(foundDemo));
-      return foundDemo;
+  if (!VALID_ROLES.includes(data.role as UserRole)) {
+    throw new Error('Your account has an invalid role configuration.');
+  }
+
+  return {
+    id: data.id,
+    name: data.full_name || 'Staff Member',
+    email,
+    organization: data.organization || '',
+    department: data.department || 'Emergency Services',
+    role: data.role as UserRole,
+    verified: data.verified,
+    isDemoAccount: false,
+  };
+}
+
+export class AuthAdapter {
+  static getSession(): UserProfile | null {
+    return getDemoSession();
+  }
+
+  static async getRealSession(): Promise<UserProfile | null> {
+    if (getDemoSession()) return null;
+
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error || !data.session?.user) return null;
+
+    try {
+      return await getSupabaseProfile(
+        data.session.user.id,
+        data.session.user.email ?? ''
+      );
+    } catch {
+      await supabase.auth.signOut();
+      return null;
+    }
+  }
+
+  static async login(
+    credentials: LoginCredentials
+  ): Promise<UserProfile> {
+    const email = credentials.email.trim().toLowerCase();
+
+    if (!email) {
+      throw new Error('Please enter your email address.');
     }
 
-    // If arbitrary email provided in demo mode, create an active demo user with requested role
-    const genericUser: UserProfile = {
-      id: `usr-${Date.now()}`,
-      name: credentials.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Staff Member',
-      email: credentials.email,
-      organization: 'MetroHealth Regional Medical Center',
-      department: 'Emergency Medicine',
-      role: 'ed_manager', // default safe operational role for demo exploration
-      verified: true,
-      isDemoAccount: true,
-    };
+    const demoProfile = Object.values(DEMO_PROFILES).find(
+      (profile) => profile.email.toLowerCase() === email
+    );
 
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(genericUser));
-    return genericUser;
+    if (demoProfile) {
+      if (isBrowser()) {
+        await supabase.auth.signOut();
+        sessionStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify(demoProfile)
+        );
+      }
+      return demoProfile;
+    }
+
+    if (!credentials.password) {
+      throw new Error('Please enter your password.');
+    }
+
+    if (isBrowser()) {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: credentials.password,
+    });
+
+    if (error || !data.user) {
+      throw new Error(error?.message || 'Invalid email or password.');
+    }
+
+    try {
+      return await getSupabaseProfile(
+        data.user.id,
+        data.user.email ?? email
+      );
+    } catch (profileError) {
+      await supabase.auth.signOut();
+      throw profileError;
+    }
   }
 
   static async switchDemoRole(role: UserRole): Promise<UserProfile> {
     const profile = DEMO_PROFILES[role];
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(profile));
+
+    if (!profile) {
+      throw new Error('Unknown demo profile.');
+    }
+
+    await supabase.auth.signOut();
+
+    if (isBrowser()) {
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify(profile)
+      );
+    }
+
     return profile;
   }
 
-  static async signup(data: SignupData): Promise<{ user: UserProfile; note: string }> {
-    await new Promise((r) => setTimeout(r, 550));
+  static async signup(data: SignupData): Promise<SignupResult> {
+    const email = data.email.trim().toLowerCase();
+    const password = data.password;
 
-    // Note in accordance with non-negotiable #2:
-    // "Role selection on signup is a requested role, not proof of authorization; sensitive roles must be verified or provisioned appropriately."
-    const isSensitive = data.requestedRole === 'hospital_admin' || data.requestedRole === 'clinician';
-    
-    const newUser: UserProfile = {
-      id: `usr-${Date.now()}`,
-      name: data.name.trim(),
-      email: data.email.trim(),
-      organization: data.organization.trim(),
-      department: data.department?.trim() || 'Emergency Services',
-      // In demo mode, give the requested role so reviewer can test it, but mark verified status honestly
-      role: data.requestedRole,
-      requestedRole: data.requestedRole,
-      verified: !isSensitive,
-      isDemoAccount: true,
-    };
+    if (!data.name.trim()) {
+      throw new Error('Please enter your name.');
+    }
 
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newUser));
+    if (!email || !password) {
+      throw new Error('Email and password are required.');
+    }
+
+    if (password.length < 8) {
+      throw new Error('Your password must be at least 8 characters.');
+    }
+
+    if (
+      Object.values(DEMO_PROFILES).some(
+        (profile) => profile.email.toLowerCase() === email
+      )
+    ) {
+      throw new Error('This email is reserved for a demo profile.');
+    }
+
+    const { data: result, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: data.name.trim(),
+          organization: data.organization.trim(),
+          department: data.department?.trim() || 'Emergency Services',
+          requested_role: data.requestedRole,
+        },
+      },
+    });
+
+    if (error) throw new Error(error.message);
+
+    if (!result.user) {
+      throw new Error('Signup did not return a user. Please try again.');
+    }
+
+    if (!result.session) {
+      return {
+        user: null,
+        requiresEmailConfirmation: true,
+        note:
+          'Your registration was submitted. Check your email for a confirmation link. After confirming your email, return here and sign in. Your initial role is Analyst pending authorization.',
+      };
+    }
+
+    const profile = await getSupabaseProfile(
+      result.user.id,
+      result.user.email ?? email
+    );
+
     return {
-      user: newUser,
-      note: isSensitive
-        ? 'In a production deployment, administrator & clinician roles require hospital credential verification.'
-        : 'Demo account provisioned successfully.'
+      user: profile,
+      requiresEmailConfirmation: false,
+      note:
+        'Account created. Your initial role is Analyst pending authorization.',
     };
   }
 
   static async logout(): Promise<void> {
-    try {
+    if (isBrowser()) {
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    } catch {
-      // Ignore
+    }
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      throw new Error('Could not sign out of your Supabase account.');
     }
   }
 
-  static async requestPasswordReset(email: string): Promise<{ success: boolean; message: string }> {
-    await new Promise((r) => setTimeout(r, 400));
-    // Safe generic message in accordance with non-negotiables
+  static async requestPasswordReset(
+    email: string
+  ): Promise<{ success: boolean; message: string }> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      throw new Error('Please enter your email address.');
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      normalizedEmail,
+      {
+        redirectTo: `${window.location.origin}/reset-password`,
+      }
+    );
+
+    if (error) throw new Error(error.message);
+
     return {
       success: true,
-      message: `If an operational account is associated with ${email}, password reset instructions have been dispatched. Note: Simulated demonstration environment (no SMTP email gateway configured).`
+      message:
+        'If an account exists for this email, password reset instructions will be sent. Check your inbox.',
     };
   }
 }
